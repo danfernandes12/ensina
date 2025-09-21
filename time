@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temporizador de 20 Minutos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Adiciona uma transição suave para as cores e transformações */
+        .btn {
+            transition: all 0.2s ease-in-out;
+        }
+        /* Efeito de escala ao passar o mouse */
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        /* Efeito de sombra interna ao pressionar */
+        .btn:active {
+            transform: scale(0.98);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+    <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
+        <!-- Título do Painel -->
+        <div class="flex flex-col items-center justify-center mb-2">
+            <img src="https://raw.githubusercontent.com/danfernandes12/ensina/1b5dd042e6cbe16775e5da6dc905ce24f36ad10e/033518_80a792a33e5149b8b56f54a0f61962d1~mv2_d_2478_1858_s_2.png" alt="Logotipo Ensina" class="h-36 mb-4">
+            <h1 class="text-3xl font-bold text-cyan-400">Painel de Foco</h1>
+        </div>
+        <p class="text-gray-400 mb-8">Use este temporizador para uma sessão de 20 minutos.</p>
+
+        <!-- Display do Temporizador -->
+        <div id="timer-display" class="text-8xl font-mono bg-gray-900 rounded-lg p-6 mb-8 tracking-widest">
+            20:00
+        </div>
+
+        <!-- Botões de Controle -->
+        <div class="flex justify-center space-x-4">
+            <button id="start-pause-button" class="btn bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg w-36 flex items-center justify-center">
+                <i class="fas fa-play mr-2"></i>
+                <span id="start-pause-text">Iniciar</span>
+            </button>
+            <button id="reset-button" class="btn bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center">
+                <i class="fas fa-sync-alt mr-2"></i>
+                <span>Reiniciar</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const initialTime = 20 * 60; // 20 minutos em segundos
+        let timeRemaining = initialTime;
+        let timerInterval = null;
+        let isRunning = false;
+
+        const timerDisplay = document.getElementById('timer-display');
+        const startPauseButton = document.getElementById('start-pause-button');
+        const startPauseText = document.getElementById('start-pause-text');
+        const startPauseIcon = startPauseButton.querySelector('i');
+        const resetButton = document.getElementById('reset-button');
+
+        // Função para formatar o tempo e atualizar o display
+        function updateDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // Função para iniciar o temporizador
+        function startTimer() {
+            if (isRunning) return;
+            isRunning = true;
+            
+            // Troca o ícone e o texto do botão para "Pausar"
+            startPauseText.textContent = 'Pausar';
+            startPauseIcon.classList.remove('fa-play');
+            startPauseIcon.classList.add('fa-pause');
+            startPauseButton.classList.remove('bg-cyan-500', 'hover:bg-cyan-600');
+            startPauseButton.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
+
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateDisplay();
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    // Toca um som quando o tempo acaba
+                    const synth = new Tone.Synth().toDestination();
+                    synth.triggerAttackRelease("C4", "8n", Tone.now());
+                    synth.triggerAttackRelease("G4", "8n", Tone.now() + 0.2);
+                    timerDisplay.textContent = "FIM!";
+                    resetTimerVisuals();
+                }
+            }, 1000);
+        }
+
+        // Função para pausar o temporizador
+        function pauseTimer() {
+            if (!isRunning) return;
+            isRunning = false;
+            clearInterval(timerInterval);
+            
+            // Troca o ícone e o texto do botão para "Iniciar"
+            resetTimerVisuals();
+        }
+
+        // Função para reiniciar o temporizador
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            timeRemaining = initialTime;
+            updateDisplay();
+            resetTimerVisuals();
+        }
+        
+        // Reseta a aparência do botão de iniciar/pausar
+        function resetTimerVisuals() {
+            startPauseText.textContent = 'Iniciar';
+            startPauseIcon.classList.remove('fa-pause');
+            startPauseIcon.classList.add('fa-play');
+            startPauseButton.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
+            startPauseButton.classList.add('bg-cyan-500', 'hover:bg-cyan-600');
+        }
+
+        // Adiciona os eventos aos botões
+        startPauseButton.addEventListener('click', () => {
+            if (isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        });
+
+        resetButton.addEventListener('click', resetTimer);
+
+        // Inicializa o display com o tempo correto
+        updateDisplay();
+    </script>
+</body>
+</html>
+
+
+
